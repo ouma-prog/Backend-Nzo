@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../../database'); // Make sure the path is correct for your database connection pool
+const pool = require('../../database'); 
 
 router.post('/formulaire', async (req, res) => {
     const {
@@ -8,20 +8,23 @@ router.post('/formulaire', async (req, res) => {
         prenom,
         nom,
         postnom,
-        Pays_de_residence,
-        telephone,
+        paysDeResidence,
+        telephonePortable,
         adressePostale,
-        codePostal,
         complementAdresse,
-        ville
+        ville,
+        quartier,      
+        concession,
+        nb_parcelle,
+        nb_total_concession
     } = req.body;
 
     try {
-        // Update the table name to 'formulaire'
         const result = await pool.query(
-            'INSERT INTO profil (civilite, prenom, nom, postnom, Pays_de_residence, telephone, adresse_postale, code_postal, complement_adresse, ville) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-            [civilite, prenom, nom, postnom, Pays_de_residence, telephone, adressePostale, codePostal, complementAdresse, ville]
+            'INSERT INTO profil (civilite, prenom, nom, postnom, Pays_de_residence, telephone, adresse_postale ,  complement_adresse, ville, quartier, concession, nb_parcelle, nb_total_concession) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
+            [civilite, prenom, nom, postnom, paysDeResidence, telephonePortable, adressePostale, complementAdresse, ville, quartier, concession, nb_parcelle, nb_total_concession]
         );
+        
 
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -29,6 +32,5 @@ router.post('/formulaire', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 module.exports = router;

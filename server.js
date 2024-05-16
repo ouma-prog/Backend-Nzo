@@ -9,6 +9,7 @@ const formulaire =require ('./controllers/Formulaire/formulaire');
 const resetpassword = require ('./controllers/resetpassword/resetpassword');
 const paiement = require ('./controllers/Gestion Cotisations/Paiements/paiement') ;
 const profil = require ('./controllers/Profil/profil')
+const NvProfil = require ('./controllers/UpdateUsers/Nvprofil')
 app.use(cors({
   origin: 'http://localhost:3001'
 }));
@@ -24,6 +25,8 @@ app.use('/api', formulaire);
 app.use('/api/resetpassword/resetToken', resetpassword);
 app.use('/api', paiement);
 app.use('/api', profil);
+app.use('/api', NvProfil);
+
 
 
 

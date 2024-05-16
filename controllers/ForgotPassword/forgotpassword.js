@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 // Fonction pour envoyer l'e-mail de réinitialisation de mot de passe
 async function sendResetEmail(email, resetToken) {
-    const resetPasswordUrl = `http://yourwebsite.com/reset-password/${resetToken}`; // Modifiez avec l'URL de votre choix
+    const resetPasswordUrl = `http://localhost:3001/reset-password/${resetToken}`; // Modifiez avec l'URL de votre choix
 
     const mailOptions = {
         from: process.env.GMAIL_EMAIL,
@@ -61,6 +61,42 @@ router.post('/forgotpassword', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erreur interne du serveur." });
+    }
+});
+
+// Endpoint pour réinitialiser le mot de passe
+router.post('/resetpassword/:resetToken', async (req, res) => {
+    const { resetToken } = req.params;
+    const { newPassword } = req.body;
+
+    try {
+        // Vérifier si le token est valide
+        const tokenRecord = await pool.query('SELECT * FROM forgotpassword WHERE token = $1 AND used = $2', [resetToken, false]);
+
+        if (tokenRecord.rows.length === 0) {
+            return res.status(400).json({ error: 'Token invalide ou expiré.' });
+        }
+
+        const tokenData = tokenRecord.rows[0];
+        const expirationDate = new Date(tokenData.expiration);
+
+        if (expirationDate < new Date()) {
+            return res.status(400).json({ error: 'Token expiré.' });
+        }
+
+        // Hash du nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe de l'utilisateur
+        await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, tokenData.email]);
+
+        // Marquer le token comme utilisé
+        await pool.query('UPDATE forgotpassword SET used = $1 WHERE token = $2', [true, resetToken]);
+
+        res.status(200).json({ message: 'Votre mot de passe a été réinitialisé avec succès.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur interne du serveur.' });
     }
 });
 
